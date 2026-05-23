@@ -1,0 +1,37 @@
+# docker-compose.yml
+services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: talentstream
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - db_data:/var/lib/mysql
+
+  php:
+    build:
+      context: ./backend
+    working_dir: /var/www/html
+    volumes:
+      - ./backend/public:/var/www/html
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm run dev"
+    depends_on:
+      - php
+
+volumes:
+  db_data:
